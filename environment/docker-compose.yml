@@ -1,0 +1,60 @@
+
+services:
+  # Layanan Odoo
+  odoo:
+    image: odoo:16.0 # Menggunakan Odoo versi 16, yang stabil
+    container_name: prometheus_odoo
+    depends_on:
+      - db
+    ports:
+      - "8069:8069" # Port untuk antarmuka web Odoo
+    volumes:
+      - ./odoo/config:/etc/odoo # Memetakan file konfigurasi kita ke dalam container
+      # - ./odoo/addons:/mnt/extra-addons # Direktori untuk addons kustom jika ada
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - NAME=postgres
+
+  # Layanan Database PostgreSQL untuk Odoo
+  db:
+    image: postgres:15
+    container_name: prometheus_postgres
+    environment:
+      - POSTGRES_DB=postgres # Database awal, Odoo akan membuat DB-nya sendiri
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Layanan Neo4j untuk Knowledge Graph
+  neo4j:
+    image: neo4j:5.18-enterprise  # Versi Neo4j 5.x yang stabil dan mendukung vector index
+    container_name: prometheus_neo4j
+    ports:
+      - "7474:7474" # Port untuk antarmuka web Neo4j Browser
+      - "7687:7687" # Port untuk koneksi Bolt (yang digunakan driver Python kita)
+    volumes:
+      - ./neo4j/data:/data
+      - ./neo4j/logs:/logs
+      # - ./neo4j/import:/var/lib/neo4j/import # Untuk impor CSV jika diperlukan
+      # - ./neo4j/plugins:/plugins # Untuk plugin GDS jika menggunakan versi Community
+    environment:
+      # Set password Neo4j di sini. GANTI dengan password yang aman.
+      - NEO4J_AUTH=neo4j/salescrm
+      # Mengaktifkan fitur vector index yang ada di versi Enterprise (gratis untuk development)
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes 
+      # - NEO4J_PLUGINS=["graph-data-science"] # Aktifkan GDS jika diperlukan
+    networks:
+      - prometheus_net
+
+# Mendefinisikan volume persisten untuk data database Odoo
+volumes:
+  odoo-db-data:
+
+# Mendefinisikan jaringan kustom agar semua layanan bisa berkomunikasi
+networks:
+  prometheus_net:

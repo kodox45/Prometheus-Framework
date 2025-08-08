@@ -1,0 +1,12 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Poetry virtual environment (jika dibuat di dalam proyek)
+.venv/
+
+# VSCode settings
+.vscode/

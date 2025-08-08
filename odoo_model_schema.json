@@ -1,0 +1,119 @@
+{
+  "sale.order": {
+    "name": {
+      "readonly": true,
+      "required": true,
+      "string": "Order Reference",
+      "type": "char"
+    },
+    "partner_id": {
+      "readonly": false,
+      "relation": "res.partner",
+      "required": true,
+      "string": "Customer",
+      "type": "many2one"
+    },
+    "state": {
+      "readonly": true,
+      "required": false,
+      "string": "Status",
+      "type": "selection"
+    },
+    "date_order": {
+      "help": "Creation date of draft/sent orders,\nConfirmation date of confirmed orders.",
+      "readonly": false,
+      "required": true,
+      "string": "Order Date",
+      "type": "datetime"
+    },
+    "order_line": {
+      "readonly": false,
+      "relation": "sale.order.line",
+      "required": false,
+      "string": "Order Lines",
+      "type": "one2many"
+    },
+    "amount_total": {
+      "readonly": true,
+      "required": false,
+      "string": "Total",
+      "type": "monetary"
+    }
+  },
+  "sale.order.line": {
+    "order_id": {
+      "readonly": false,
+      "relation": "sale.order",
+      "required": true,
+      "string": "Order Reference",
+      "type": "many2one"
+    },
+    "product_id": {
+      "readonly": false,
+      "relation": "product.product",
+      "required": false,
+      "string": "Product",
+      "type": "many2one"
+    },
+    "product_uom_qty": {
+      "readonly": false,
+      "required": true,
+      "string": "Quantity",
+      "type": "float"
+    },
+    "price_unit": {
+      "readonly": false,
+      "required": true,
+      "string": "Unit Price",
+      "type": "float"
+    },
+    "price_subtotal": {
+      "readonly": true,
+      "required": false,
+      "string": "Subtotal",
+      "type": "monetary"
+    }
+  },
+  "res.partner": {
+    "name": {
+      "readonly": false,
+      "required": false,
+      "string": "Name",
+      "type": "char"
+    },
+    "email": {
+      "readonly": false,
+      "required": false,
+      "string": "Email",
+      "type": "char"
+    },
+    "is_company": {
+      "help": "Check if the contact is a company, otherwise it is a person",
+      "readonly": false,
+      "required": false,
+      "string": "Is a Company",
+      "type": "boolean"
+    }
+  },
+  "product.product": {
+    "name": {
+      "readonly": false,
+      "required": true,
+      "string": "Name",
+      "type": "char"
+    },
+    "list_price": {
+      "help": "Price at which the product is sold to customers.",
+      "readonly": false,
+      "required": false,
+      "string": "Sales Price",
+      "type": "float"
+    },
+    "sale_ok": {
+      "readonly": false,
+      "required": false,
+      "string": "Can be Sold",
+      "type": "boolean"
+    }
+  }
+}

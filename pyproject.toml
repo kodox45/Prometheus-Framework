@@ -1,0 +1,28 @@
+[project]
+name = "prometheus-framework"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "kodox45",email = "farezayuza@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic[dotenv] (>=2.11.7,<3.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "neo4j (>=5.28.1,<6.0.0)",
+    "openai (>=1.96.1,<2.0.0)",
+    "sqlalchemy (>=2.0.41,<3.0.0)",
+    "pydantic-settings (>=2.10.1,<3.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "faker (>=37.4.2,<38.0.0)",
+    "tiktoken (>=0.9.0,<0.10.0)"
+]
+
+[tool.poetry]
+packages = [{include = "prometheus_framework", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
