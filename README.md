@@ -1,6 +1,7 @@
 # Prometheus Framework
 _An agentic framework to autonomously transform enterprise data into an intelligent, queryable digital twin._
 
+![High-Level Diagram](https://github.com/kodox45/Prometheus-Framework/blob/e2e180ea7421b594b5dd11d04c63323c55496018/img/Screenshot%202025-09-04%20094329.png)
 
 ---
 
@@ -35,6 +36,8 @@ The current core of Prometheus is the **Genesis Engine**, an end-to-end workflow
 3.  **Executing AI-Powered Semantic Synthesis:** Using a Large Language Model (LLM) to synthesize all evidence into a concise, structured understanding, including the entity's functional purpose, hidden business logic, and stereotype.
 4.  **Discovering Implicit Relations:** Leveraging vector similarity search to find and validate hidden business relationships that are not defined by Foreign Keys.
 5.  **Creating a High-Performance Vector Index:** Storing the semantic understanding as *vector embeddings* and automatically building a native vector index in Neo4j, making the entire KG ready for high-speed semantic search by future AI systems.
+
+![Nodes](https://github.com/kodox45/Prometheus-Framework/blob/e2e180ea7421b594b5dd11d04c63323c55496018/img/Screenshot%202025-09-04%20094601.png)
 
 ### **Getting Started: A Guide for Developers**
 
