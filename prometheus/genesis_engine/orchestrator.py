@@ -2,6 +2,7 @@
 
 import random
 import pprint
+import os
 from typing import List, Optional
 
 # Import konektor dan komponen inti
@@ -134,6 +135,11 @@ class Orchestrator:
 
     def _confirm_enrichment_cost(self, entities_to_process: List[tuple], db_schema: DatabaseSchema) -> bool:
         """Gathers evidence, calculates cost, and asks for user confirmation."""
+        # Non-interactive mode for Cloud Run / CI
+        assume_yes = os.getenv("ASSUME_YES", "").lower() in ("1", "true", "yes")
+        if assume_yes:
+            print("  - ASSUME_YES is set; skipping cost prompt and proceeding.")
+            return True
         print("  - Collecting evidence to estimate cost...")
         evidence_map = {}
         for entity_type, entity_name in entities_to_process:

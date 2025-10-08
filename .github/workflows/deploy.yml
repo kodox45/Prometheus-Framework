@@ -1,0 +1,125 @@
+name: Deploy services to Cloud Run Jobs
+
+on:
+  push:
+    branches: [ deploy-dev ]
+
+jobs:
+  build-and-deploy-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev -q
+
+      - name: Build and push image
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/runner:${{ github.sha }}
+        run: |
+          docker build -f services/runner/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Update Cloud Run Job
+        run: |
+          gcloud run jobs update runner-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/runner:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} || \
+          gcloud run jobs create runner-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/runner:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --cpu=2 --memory=4Gi --max-retries=1
+
+  build-and-deploy-extractor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev -q
+      - name: Build and push image
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/extractor:${{ github.sha }}
+        run: |
+          docker build -f services/extractor/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+      - name: Update Cloud Run Job
+        run: |
+          gcloud run jobs update extractor-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/extractor:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} || \
+          gcloud run jobs create extractor-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/extractor:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --cpu=2 --memory=4Gi --max-retries=1
+
+  build-and-deploy-synthesizer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev -q
+      - name: Build and push image
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/synthesizer:${{ github.sha }}
+        run: |
+          docker build -f services/synthesizer/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+      - name: Update Cloud Run Job
+        run: |
+          gcloud run jobs update synthesizer-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/synthesizer:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} || \
+          gcloud run jobs create synthesizer-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/synthesizer:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --cpu=2 --memory=4Gi --max-retries=1
+
+  build-and-deploy-relation-finder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev -q
+      - name: Build and push image
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/relation-finder:${{ github.sha }}
+        run: |
+          docker build -f services/relation-finder/Dockerfile -t $IMAGE .
+          docker push $IMAGE
+      - name: Update Cloud Run Job
+        run: |
+          gcloud run jobs update relation-finder-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/relation-finder:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} || \
+          gcloud run jobs create relation-finder-service \
+            --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prometheus-repo/relation-finder:${{ github.sha }} \
+            --region=${{ secrets.GCP_REGION }} \
+            --cpu=2 --memory=4Gi --max-retries=1
+
+

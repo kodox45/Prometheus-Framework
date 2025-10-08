@@ -12,3 +12,7 @@ __pycache__/
 
 # VSCode settings
 .vscode/
+services/**/dist
+services/**/__pycache__
+services/**/.venv
+sa-key.json
