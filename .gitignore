@@ -1,6 +1,8 @@
 # Environment variables
 .env
 
+environment/neo4j
+environment/odoo
 # Python cache
 __pycache__/
 *.pyc
