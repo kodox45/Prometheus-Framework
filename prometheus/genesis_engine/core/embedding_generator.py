@@ -1,24 +1,32 @@
 # prometheus/genesis_engine/core/embedding_generator.py
 
 from typing import List, Optional
-from openai import OpenAI
+from google import genai
 
 from prometheus.config.settings import settings
 
 class EmbeddingGenerator:
     """
-    Generates vector embeddings for text using OpenAI's API.
+    Generates vector embeddings for text using Google's Generative AI API.
     """
-    # Model embedding yang direkomendasikan OpenAI saat ini.
-    # Menghasilkan vektor dengan 1536 dimensi.
-    EMBEDDING_MODEL = "text-embedding-3-small"
+    EMBEDDING_MODEL = "gemini-embedding-001"
     EMBEDDING_DIMENSIONS = 1536
 
     def __init__(self):
-        if not settings.openai_api_key:
-            raise ValueError("OpenAI API key not found in settings.")
-        self.client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
-        print(f"✅ EmbeddingGenerator initialized with model: {self.EMBEDDING_MODEL}")
+        # Support either direct Generative AI API via API key or Vertex AI via ADC
+        if settings.use_vertex_ai:
+            if not settings.gcp_project_id or not settings.gcp_location:
+                raise ValueError("Vertex AI enabled but gcp_project_id or gcp_location is not set in settings.")
+            self._client = genai.Client(
+                vertexai=True,
+                project=settings.gcp_project_id,
+                location=settings.gcp_location,
+            )
+        else:
+            if not settings.google_api_key:
+                raise ValueError("Google API key not found in settings.")
+            self._client = genai.Client(api_key=settings.google_api_key.get_secret_value())
+        print(f"EmbeddingGenerator initialized with model: {self.EMBEDDING_MODEL}")
 
     def generate(self, text: str) -> Optional[List[float]]:
         """
@@ -37,14 +45,34 @@ class EmbeddingGenerator:
             # Ganti newline dengan spasi untuk hasil embedding yang lebih baik
             text_to_embed = text.replace("\n", " ")
             
-            # Panggil API Embeddings
-            response = self.client.embeddings.create(
-                input=[text_to_embed], 
-                model=self.EMBEDDING_MODEL
+            # Panggil API Embeddings (google-genai)
+            response = self._client.models.embed_content(
+                model=self.EMBEDDING_MODEL,
+                contents=text_to_embed,
+                config={
+                    "output_dimensionality": self.EMBEDDING_DIMENSIONS
+                },
             )
-            
-            # Ekstrak embedding dari respons
-            embedding_vector = response.data[0].embedding
+
+            # Ekstrak embedding dari respons (google-genai returns `embeddings`)
+            embedding_vector = None
+            embeddings_obj = getattr(response, "embeddings", None)
+            if embeddings_obj is None and isinstance(response, dict):
+                embeddings_obj = response.get("embeddings")
+            if embeddings_obj is not None:
+                if isinstance(embeddings_obj, list) and len(embeddings_obj) > 0:
+                    first = embeddings_obj[0]
+                    if hasattr(first, "values"):
+                        embedding_vector = list(first.values)  # type: ignore
+                    elif isinstance(first, dict) and "values" in first:
+                        embedding_vector = first["values"]  # type: ignore
+                    elif isinstance(first, list):
+                        embedding_vector = first  # type: ignore
+            if embedding_vector is None:
+                # Fallback to older shape
+                embedding_vector = getattr(response, "embedding", None)
+                if embedding_vector is None and isinstance(response, dict):
+                    embedding_vector = response.get("embedding")
             
             # Verifikasi dimensi untuk keamanan
             if len(embedding_vector) != self.EMBEDDING_DIMENSIONS:
@@ -54,5 +82,5 @@ class EmbeddingGenerator:
             return embedding_vector
 
         except Exception as e:
-            print(f"❌ An error occurred during embedding generation: {e}")
+            print(f"Error during embedding generation: {e}")
             return None

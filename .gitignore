@@ -10,3 +10,15 @@ __pycache__/
 
 # VSCode settings
 .vscode/
+
+/environment/neo4j/data/
+/environment/neo4j/logs/
+/environment/odoo-db-data/ # Jika Anda membuat volume bernama untuk Postgres
+# Secara umum, abaikan semua yang ada di dalam environment kecuali file konfigurasi
+/environment/*
+!/environment/docker-compose.yml
+!/environment/odoo/
+/environment/odoo/*
+!/environment/odoo/config/
+/environment/odoo/config/*
+!/environment/odoo/config/odoo.conf

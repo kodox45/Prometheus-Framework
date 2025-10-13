@@ -44,7 +44,9 @@ Interested in trying it out? Here’s how to get Prometheus up and running.
 -   Docker & Docker Compose
 -   Python 3.10+
 -   Poetry (for dependency management)
--   An OpenAI Account & API Key
+-   Either:
+    - Google AI Studio API Key (direct Generative AI), or
+    - Vertex AI access with GCP Project and ADC credentials
 
 #### **1. Project Installation**
 
@@ -65,8 +67,18 @@ cp .env.example .env
 Open the newly created `.env` file and fill in all the values:
 -   `POSTGRES_*`: Connection details for your PostgreSQL database.
 -   `NEO4J_*`: Credentials for your Neo4j database.
--   `OPENAI_API_KEY`: Your personal OpenAI API key.
+-   LLM setup (choose ONE):
+    - Direct Generative AI:
+      - `GOOGLE_API_KEY="..."`
+      - `USE_VERTEX_AI=false`
+    - Vertex AI (recommended for GCP):
+      - `USE_VERTEX_AI=true`
+      - `GCP_PROJECT_ID="your-project-id"`
+      - `GCP_LOCATION="us-central1"` (or your region)
+      - Authentication: Use Application Default Credentials (e.g., `gcloud auth application-default login` or service account env vars)
 -   Adjust the LLM models and pricing if needed.
+
+If using Vertex AI, no `GOOGLE_API_KEY` is required; the client uses ADC.
 
 #### **3. Launch Docker Services**
 

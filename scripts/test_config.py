@@ -6,7 +6,7 @@ try:
     print(f"Postgres User: {settings.postgres_user}")
     print(f"Postgres Password: {settings.postgres_password}")
     print(f"Postgres DSN: {settings.pg_dsn}")
-    print(f"OpenAI Key is loaded: {settings.openai_api_key is not None}")
+    print(f"Google Key is loaded: {settings.google_api_key is not None}")
     print("\n✅ Settings module loaded successfully!")
 except Exception as e:
     print(f"\n❌ Error loading settings module: {e}")

@@ -2,7 +2,7 @@
 
 import json
 from typing import List, Optional
-from openai import OpenAI
+from google import genai
 import re
 
 from prometheus.config.settings import settings
@@ -40,10 +40,23 @@ class DescriptionSynthesizer:
     a structured core description.
     """
     def __init__(self):
-        if not settings.openai_api_key:
-            raise ValueError("OpenAI API key not found in settings.")
-        self.client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
+        # Support either direct Generative AI API via API key or Vertex AI via ADC
+        if settings.use_vertex_ai:
+            if not settings.gcp_project_id or not settings.gcp_location:
+                raise ValueError("Vertex AI enabled but gcp_project_id or gcp_location is not set in settings.")
+            self._client = genai.Client(
+                vertexai=True,
+                project=settings.gcp_project_id,
+                location=settings.gcp_location,
+            )
+        else:
+            if not settings.google_api_key:
+                raise ValueError("Google API key not found in settings.")
+            self._client = genai.Client(api_key=settings.google_api_key.get_secret_value())
         self.model = settings.synthesis_model_name
+        # Normalize model id when using Vertex AI (do not include "models/" prefix)
+        if settings.use_vertex_ai and isinstance(self.model, str) and self.model.startswith("models/"):
+            self.model = self.model.split("/", 1)[1]
 
     def _build_prompt(self, entity_type: str, entity_name: str, evidence_dossier: List[EvidenceChunk]) -> str:
         """Merakit semua bagian menjadi satu prompt master."""
@@ -82,18 +95,16 @@ class DescriptionSynthesizer:
         
         try:
             print(f"  > Calling LLM for {entity_name}...")
-            completion = self.client.chat.completions.create(
+            completion = self._client.models.generate_content(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful AI data architect that only responds with JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                # JSON Mode memastikan output adalah JSON yang valid
-                response_format={"type": "json_object"},
-                temperature=0.2, # Sedikit kreativitas tapi tetap faktual
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.2,
+                },
             )
-            
-            response_content = completion.choices[0].message.content
+
+            response_content = getattr(completion, "output_text", None) or getattr(completion, "text", None)
             if not response_content:
                 print(f"⚠️ LLM returned an empty response for {entity_name}.")
                 return None
@@ -106,5 +117,5 @@ class DescriptionSynthesizer:
             return validated_description
 
         except Exception as e:
-            print(f"❌ An error occurred during LLM synthesis for {entity_name}: {e}")
+            print(f"Error during LLM synthesis for {entity_name}: {e}")
             return None

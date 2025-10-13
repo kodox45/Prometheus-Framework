@@ -148,6 +148,11 @@ class Orchestrator:
         print("\n--- Enrichment Cost Estimation ---")
         pprint.pprint(cost_report)
         
+        import os
+        auto_confirm = os.getenv("PROMETHEUS_AUTO_CONFIRM", "false").lower() == "true"
+        if auto_confirm:
+            print("  - Auto-confirm enabled via PROMETHEUS_AUTO_CONFIRM. Proceeding without prompt.")
+            return True
         proceed = input("\n> Do you want to proceed with enrichment? (yes/no): ").lower().strip()
         return proceed == 'yes'
 

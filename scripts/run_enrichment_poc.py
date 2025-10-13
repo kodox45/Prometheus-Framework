@@ -19,7 +19,7 @@ def main():
     neo4j_connector = Neo4jConnector(settings)
     
     orchestrator = Orchestrator(pg_connector, neo4j_connector)
-    orchestrator.run_genesis(sample_size=20, clean_db=False, force_rerun_enrichment=False)
+    orchestrator.run_genesis(sample_size=10, clean_db=False, force_rerun_enrichment=False)
 
 if __name__ == "__main__":
     main()

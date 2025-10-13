@@ -1,7 +1,7 @@
 # prometheus/genesis_engine/core/implicit_relation_finder.py
 
 from typing import List, Dict, Optional, Callable
-from openai import OpenAI
+from google import genai
 import json
 from prometheus.config.settings import settings
 from prometheus.connectors.neo4j_connector import Neo4jConnector
@@ -41,9 +41,19 @@ class ImplicitRelationFinder:
         self.connector = neo4j_connector
         self.create_relation_in_kg = relation_creation_fn
 
-        if not settings.openai_api_key:
-            raise ValueError("OpenAI API key not found in settings.")
-        self.client = OpenAI(api_key=settings.openai_api_key.get_secret_value())
+        # Support either direct Generative AI API via API key or Vertex AI via ADC
+        if settings.use_vertex_ai:
+            if not settings.gcp_project_id or not settings.gcp_location:
+                raise ValueError("Vertex AI enabled but gcp_project_id or gcp_location is not set in settings.")
+            self._client = genai.Client(
+                vertexai=True,
+                project=settings.gcp_project_id,
+                location=settings.gcp_location,
+            )
+        else:
+            if not settings.google_api_key:
+                raise ValueError("Google API key not found in settings.")
+            self._client = genai.Client(api_key=settings.google_api_key.get_secret_value())
         self.model = settings.relation_model_name
         self.cost_calculator = RelationCostCalculator()
 
@@ -124,13 +134,19 @@ class ImplicitRelationFinder:
             table_b_stereotype=table_b.get('stereotype'),
         )
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
-                temperature=0.1
+            # Normalize model id when using Vertex AI
+            model_id = self.model
+            if settings.use_vertex_ai and isinstance(model_id, str) and model_id.startswith("models/"):
+                model_id = model_id.split("/", 1)[1]
+            completion = self._client.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.1,
+                },
             )
-            response_content = completion.choices[0].message.content
+            response_content = getattr(completion, "output_text", None) or getattr(completion, "text", None)
             if not response_content:
                 print(f"⚠️ LLM returned an empty response for relation check between {table_a['name']} and {table_b['name']}.")
                 return None, None
@@ -139,10 +155,11 @@ class ImplicitRelationFinder:
 
             validated_relation = ImplicitRelation(**parsed_json)
             
+            um = getattr(completion, "usage_metadata", None)
             usage_data = {
-                "prompt_tokens": completion.usage.prompt_tokens,
-                "completion_tokens": completion.usage.completion_tokens
-            } if completion.usage else None
+                "prompt_tokens": getattr(um, "prompt_token_count", 0) if um else 0,
+                "completion_tokens": getattr(um, "candidates_token_count", 0) if um else 0
+            }
 
             # Kembalikan objek Pydantic yang sudah divalidasi
             return validated_relation, usage_data

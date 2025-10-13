@@ -31,8 +31,13 @@ class Settings(BaseSettings):
     neo4j_password: SecretStr = Field(...)
     neo4j_uri: str = Field(...)
 
-    # --- OpenAI API Settings ---
-    openai_api_key: SecretStr = Field(...)
+    # --- API Keys / Cloud Config ---
+    openai_api_key: SecretStr | None = None
+    # When using Vertex AI, service account ADC is preferred; API key may be unused
+    google_api_key: SecretStr | None = None
+    use_vertex_ai: bool = Field(default=False)
+    gcp_project_id: str | None = None
+    gcp_location: str | None = None
 
     # --- BARU: LLM Cost Models ---
     synthesis_model_name: str = Field(...)
