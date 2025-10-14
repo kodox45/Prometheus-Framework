@@ -12,23 +12,23 @@ services:
       - ./odoo/config:/etc/odoo # Memetakan file konfigurasi kita ke dalam container
       # - ./odoo/addons:/mnt/extra-addons # Direktori untuk addons kustom jika ada
     environment:
-      - HOST=db
-      - USER=odoo
-      - PASSWORD=odoo
-      - NAME=postgres
+      - HOST=localhost
+      - USER=postgres
+      - PASSWORD=postgre
+      - NAME=odoo
 
   # Layanan Database PostgreSQL untuk Odoo
   db:
     image: postgres:15
     container_name: prometheus_postgres
     environment:
-      - POSTGRES_DB=postgres # Database awal, Odoo akan membuat DB-nya sendiri
-      - POSTGRES_PASSWORD=odoo
-      - POSTGRES_USER=odoo
+      - POSTGRES_DB=odoo # Database awal, Odoo akan membuat DB-nya sendiri
+      - POSTGRES_PASSWORD=postgre
+      - POSTGRES_USER=postgres
     volumes:
       - odoo-db-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   # Layanan Neo4j untuk Knowledge Graph
   neo4j:

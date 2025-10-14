@@ -1,8 +1,7 @@
 # Environment variables
 .env
 
-environment/neo4j
-environment/odoo
+
 # Python cache
 __pycache__/
 *.pyc
@@ -16,3 +15,12 @@ services/**/dist
 services/**/__pycache__
 services/**/.venv
 sa-key.json
+
+sql/
+
+local-scripts/
+
+environment/neo4j/
+environment/odoo/
+environment/odoo/config/
+environment/odoo/config/odoo.conf
