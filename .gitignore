@@ -22,3 +22,6 @@ __pycache__/
 !/environment/odoo/config/
 /environment/odoo/config/*
 !/environment/odoo/config/odoo.conf
+
+sql/
+local-scripts/
